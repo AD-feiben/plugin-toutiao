@@ -10,6 +10,12 @@
 
 - [x] 无需安装开发环境，降低用户使用门槛，达到一键获取数据发布文章的效果。
 
+## 运行效果
+
+<p align="center">
+  <img alt="plugin-toutiao" src="./img/effect.png" width="300px">
+</p>
+
 ## 使用
 
 1、下载该项目；
