@@ -98,7 +98,6 @@ body {
 
 .qrcode {
   position: relative;
-  cursor: pointer;
 }
 
 .qrcode-img {
@@ -122,4 +121,9 @@ body {
 
 a {
   color: #ed4040;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
