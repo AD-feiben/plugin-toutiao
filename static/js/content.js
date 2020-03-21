@@ -1,4 +1,9 @@
 (function () {
+
+  let removeToastTimer = null,
+    elToast = null,
+    toastInBody = false;
+
   function sendMsg (message) {
     return new Promise(resolve => {
       chrome.runtime.sendMessage({
@@ -44,14 +49,14 @@
 
         count++;
         canUseList.push(item);
-        toast(`加载中，${(count/len*100).toFixed(2)}%`);
+        toast(`加载中，${(count/len*100).toFixed(2)}%`, 5000);
         if (count === len) {
           setHTML(canUseList, len);
         }
       }
       img.onerror = function () {
         count++;
-        toast(`加载中，${(count/len*100).toFixed(2)}%`);
+        toast(`加载中，${(count/len*100).toFixed(2)}%`, 5000);
         if (count === len) {
           setHTML(canUseList, len);
         }
@@ -67,10 +72,9 @@
         toast(`其中 ${failLen} 条图片加载失败`);
       }
     }
-    let proseMirror = document.querySelector(".ProseMirror"),
-      title = document.querySelector("textarea");
+    let proseMirror = document.querySelector(".ProseMirror");
 
-    if (proseMirror === null || title === null) {
+    if (proseMirror === null) {
       setTimeout(() => {
         setHTML(list)
       }, 1000);
@@ -79,7 +83,7 @@
 
     let html = ''
     list.map((item, index) => {
-      html += `<p><strong>${index + 1}、 ${item.text}</strong></p>`;
+      html += `<p><strong>${item.text}</strong></p>`;
       if (item.top_comments_content) {
         html += `<p>神评论：${item.top_comments_content}</p>`
       }
@@ -90,7 +94,7 @@
     html && (html += '<blockquote><p>图片来自网络，侵删</p></blockquote>');
 
 
-    setTitle(title, '搞笑动图GIF');
+    setTitle('搞笑动图GIF');
     try {
       proseMirror.innerHTML = html;
     } catch (e) {
@@ -99,18 +103,20 @@
     }
   }
 
-  function setTitle (el, title) {
-    setTimeout(() => {
-      el.value = title.substr(0, el.value.length + 1);
-      if (el.value.length < title.length) {
-        setTitle(el, title);
-      }
-    }, Math.random() * 500 + 500);
+  function setTitle (title) {
+    copy(title);
+    toast(`标题需要手动输入，已复制“${title}”`);
   }
 
-  let removeToastTimer = null,
-    elToast = null,
-    toastInBody = false;
+  function copy (msg) {
+    let elCp = document.createElement('textarea');
+    elCp.innerText = msg;
+    document.body.appendChild(elCp);
+    elCp.select(); // 选中文本
+    document.execCommand("copy"); // 执行浏览器复制命令
+    document.body.removeChild(elCp);
+  }
+
   function toast (msg, duration=3000) {
     if (elToast === null) {
       elToast = document.createElement('div');

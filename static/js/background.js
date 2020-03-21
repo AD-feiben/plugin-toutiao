@@ -8,10 +8,12 @@ let page_loaded = false;
 chrome.runtime.onMessage.addListener(function(request, sender, sendResonse){
   if (!loadFromPlugin) return;
   if(request.type === 'content_onload'){
-    if (sender.url.indexOf(PUBLISH_URL) > -1) {
+    if (sender.url.indexOf(PUBLISH_URL) > -1 && res.length !== 0) {
       page_loaded = true;
       sendMsg({ type: 'res', value: { res } });
+      page_loaded = false;
       loadFromPlugin = false;
+      res = [];
     } else {
       sendMsg('need_login');
     }
@@ -48,6 +50,8 @@ async function getContent(count) {
     if (!page_loaded) return;
     sendMsg({ type: 'res', value: { res } });
     loadFromPlugin = false;
+    page_loaded = false;
+    res = [];
   } catch (e) {
     res = [];
   }
