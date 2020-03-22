@@ -81,9 +81,9 @@
       return;
     }
 
-    let html = ''
+    let html = '';
     list.map((item, index) => {
-      html += `<p><strong>${item.text}</strong></p>`;
+      html += `<h3><strong>${item.text}</strong></h3>`;
       if (item.top_comments_content) {
         html += `<p>神评论：${item.top_comments_content}</p>`
       }
