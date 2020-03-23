@@ -15,8 +15,8 @@
         $el = $el.parentNode;
       }
       $el && fn.call($el, e, el);
+      return $el;
     });
-    return $el;
   }
 
   function sendMsg (message) {
