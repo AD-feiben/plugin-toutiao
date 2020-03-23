@@ -4,6 +4,21 @@
     elToast = null,
     toastInBody = false;
 
+  function entrust (el, type, selector, fn) {
+    el.addEventListener(type, (e) => {
+      $el = e.target;
+      while (!$el.matches(selector)) {
+        if ($el === el) {
+          $el = null;
+          return;
+        }
+        $el = $el.parentNode;
+      }
+      $el && fn.call($el, e, el);
+    });
+    return $el;
+  }
+
   function sendMsg (message) {
     return new Promise(resolve => {
       chrome.runtime.sendMessage({
@@ -81,6 +96,9 @@
       return;
     }
 
+    entrust(proseMirror, 'click', 'H3', (e) => {
+      setTitle(e.target.innerText);
+    });
     let html = '';
     list.map((item, index) => {
       html += `<h3><strong>${item.text}</strong></h3>`;
@@ -93,8 +111,6 @@
 
     html && (html += '<blockquote><p>图片来自网络，侵删</p></blockquote>');
 
-
-    setTitle('搞笑动图GIF');
     try {
       proseMirror.innerHTML = html;
     } catch (e) {
