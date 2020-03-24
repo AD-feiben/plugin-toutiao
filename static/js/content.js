@@ -30,21 +30,22 @@
     });
   }
 
-  sendMsg({ type: "onload" });
+  if (window.name.indexOf('funny_gif') > -1) {
+    sendMsg({ type: "onload" }).then(response => {
+      if (!response) return;
 
-  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
-
-    if (request.type === 'popup_link') {
-      location.href = request.value.url;
-    }
-
-    if(request.type === 'bg_res'){
-      let res = request.value.res;
+      let res = response.value.res;
 
       if (res.code === 200) {
+        if (res.remaining > 0) {
+          window.open(res.url, `funny_gif_${res.remaining}`);
+        }
         checkImg(res.result);
       }
-    }
+    });
+  }
+
+  chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
 
     if (request.type === 'bg_need_login') {
       toast('请重新登录');
@@ -147,9 +148,9 @@
     removeToastTimer && window.clearTimeout(removeToastTimer);
 
     removeToastTimer = setTimeout(() => {
-      elToast.classList.add('leave');
+      elToast && elToast.classList.add('leave');
       setTimeout(() => {
-        document.body.removeChild(elToast);
+        elToast && document.body.removeChild(elToast);
         elToast = null;
         toastInBody = false;
       }, 200);

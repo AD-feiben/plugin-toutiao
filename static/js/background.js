@@ -1,19 +1,37 @@
 const PUBLISH_URL = 'https://mp.toutiao.com/profile_v3/graphic/publish';
 
+let articleCount = 4;
+let finishedArticleCount = 0;
 let count = 20;
-let loadFromPlugin = false;
-let res = [];
-let page_loaded = false;
+let res = { code: 200, result: [] };
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResonse){
-  if (!loadFromPlugin) return;
   if(request.type === 'content_onload'){
-    if (sender.url.indexOf(PUBLISH_URL) > -1 && res.length !== 0) {
-      page_loaded = true;
-      sendMsg({ type: 'res', value: { res } });
-      page_loaded = false;
-      loadFromPlugin = false;
-      res = [];
+    if (
+      res.length !== 0
+      && articleCount !== finishedArticleCount
+    ) {
+      ++finishedArticleCount;
+      let remaining = articleCount - finishedArticleCount;
+      let response = {
+        type: 'res',
+        value: {
+          res: {
+            code: res.code,
+            result: res.result.splice(0, count),
+            remaining,
+            url: PUBLISH_URL
+          }
+        }
+      };
+      console.log(response);
+
+      sendResonse(response);
+
+      if (finishedArticleCount === articleCount) {
+        finishedArticleCount = 0;
+        res = [];
+      }
     } else {
       sendMsg('need_login');
     }
@@ -40,18 +58,13 @@ function sendMsg (message) {
 }
 
 
-async function getContent(count) {
+async function getContent(articleCount, count) {
+  articleCount = articleCount;
   count = count;
-  loadFromPlugin = true;
 
   try {
-    let response = await fetch(`https://api.apiopen.top/getJoke?type=gif&count=${count}`);
+    let response = await fetch(`https://api.apiopen.top/getJoke?type=gif&count=${articleCount * count}`);
     res = await response.json();
-    if (!page_loaded) return;
-    sendMsg({ type: 'res', value: { res } });
-    loadFromPlugin = false;
-    page_loaded = false;
-    res = [];
   } catch (e) {
     res = [];
   }
