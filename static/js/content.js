@@ -89,6 +89,7 @@
       }
     }
     let proseMirror = document.querySelector(".ProseMirror");
+    let pushAdBtn = document.querySelectorAll('.article-ad-radio')[0];
 
     if (proseMirror === null) {
       setTimeout(() => {
@@ -96,6 +97,8 @@
       }, 1000);
       return;
     }
+
+    pushAdBtn.click();
 
     entrust(proseMirror, 'click', 'H3', (e) => {
       setTitle(e.target.innerText);
@@ -112,6 +115,10 @@
 
     html && (html += '<blockquote><p>图片来自网络，侵删</p></blockquote>');
 
+    toast('点击内容标题可以设置为文章标题');
+
+    setTitle('搞笑动图GIF');
+
     try {
       proseMirror.innerHTML = html;
     } catch (e) {
@@ -121,8 +128,15 @@
   }
 
   function setTitle (title) {
-    copy(title);
-    toast(`标题需要手动输入，已复制“${title}”`);
+    let titleInput = document.querySelector('textarea');
+    titleInput.focus();
+    titleInput.value = title;
+    if (typeof titleInput.fireEvent === 'function') {
+      titleInput.fireEvent("oninput");
+      titleInput.fireEvent("onchange");
+    } else {
+      copy(`已复制：${title}，请手动粘贴`);
+    }
   }
 
   function copy (msg) {
