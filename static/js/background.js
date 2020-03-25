@@ -28,7 +28,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResonse){
 
       sendResonse(response);
 
-      if (finishedArticleCount === articleCount) {
+      if (finishedArticleCount >= articleCount) {
         finishedArticleCount = 0;
         res = [];
       }
@@ -58,9 +58,9 @@ function sendMsg (message) {
 }
 
 
-async function getContent(articleCount, count) {
-  articleCount = articleCount;
-  count = count;
+async function getContent(articleNum, contentNum) {
+  articleCount = articleNum;
+  count = contentNum;
 
   try {
     let response = await fetch(`https://api.apiopen.top/getJoke?type=gif&count=${articleCount * count}`);
