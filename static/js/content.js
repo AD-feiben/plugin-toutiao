@@ -143,13 +143,15 @@
     }
 
     if (container === null) return toast('无法获取标题输入框');
-    container.focus();
-    container.value = title;
-    if (typeof container.fireEvent === 'function') {
+
+    if (typeof container.fireEvent === 'function' && IS_UC === false) {
+      container.focus();
+      container.value = title;
       container.fireEvent("oninput");
       container.fireEvent("onchange");
     } else {
-      $.copy(`已复制：${title}，请手动粘贴`);
+      $.copy(title);
+      toast(`已复制：${title}，请手动粘贴`);
     }
   }
 
