@@ -1,23 +1,13 @@
 (function () {
 
+  const IS_UC = location.href.indexOf('https://mp.dayu.com/') > -1;
+  const IS_TOUTIAO = location.href.indexOf('https://mp.toutiao.com/') > -1;
+  const IS_FUNNY = window.name.indexOf('funny_gif') > -1;
+
   let removeToastTimer = null,
     elToast = null,
-    toastInBody = false;
-
-  function entrust (el, type, selector, fn) {
-    el.addEventListener(type, (e) => {
-      $el = e.target;
-      while (!$el.matches(selector)) {
-        if ($el === el) {
-          $el = null;
-          return;
-        }
-        $el = $el.parentNode;
-      }
-      $el && fn.call($el, e, el);
-      return $el;
-    });
-  }
+    toastInBody = false,
+    funQueue = [];
 
   function sendMsg (message) {
     return new Promise(resolve => {
@@ -30,7 +20,7 @@
     });
   }
 
-  if (window.name.indexOf('funny_gif') > -1) {
+  if (IS_FUNNY) {
     sendMsg({ type: "onload" }).then(response => {
       if (!response) return;
 
@@ -38,7 +28,7 @@
 
       if (res.code === 200) {
         if (res.remaining > 0) {
-          window.open(res.url, `funny_gif_${res.remaining}`);
+          window.open(location.href, `funny_gif_${res.remaining}`);
         }
         checkImg(res.result);
       }
@@ -58,53 +48,69 @@
     let count = 0;
     let len = list.length;
     let canUseList = [];
-    list.map((item, index) => {
-      let img = new Image();
-      img.src = item.images;
-      img.onload = function () {
-
-        count++;
+    list.map(async (item, index) => {
+      try {
+        await $.loadImg(item.images);
         canUseList.push(item);
-        toast(`加载中，${(count/len*100).toFixed(2)}%`, 5000);
-        if (count === len) {
-          setHTML(canUseList, len);
-        }
-      }
-      img.onerror = function () {
+      } catch (err) {
+      } finally {
         count++;
         toast(`加载中，${(count/len*100).toFixed(2)}%`, 5000);
         if (count === len) {
-          setHTML(canUseList, len);
+          let failLen = len - canUseList.length
+          if (failLen !== 0) {
+            toast(`其中 ${failLen} 张图片加载失败`);
+          }
+
+          funQueue.push(() => {
+            setHTML(canUseList);
+          });
+
+          waitContainerLoad();
         }
       }
     });
   }
 
+  function waitContainerLoad () {
+    let container = null;
+    if (IS_TOUTIAO) {
+      container = $.query('.ProseMirror');
+    }
+    if (IS_UC) {
+      container = $.query('#ueditor_0') && $.query('#ueditor_0').contentDocument.body;
+    }
 
-  function setHTML (list, totalLen) {
-    if (totalLen) {
-      let failLen = totalLen - list.length
-      if (failLen !== 0) {
-        toast(`其中 ${failLen} 条图片加载失败`);
+    if (container === null) {
+      setTimeout(waitContainerLoad, 1000);
+    } else {
+      $.entrust(container, 'click', 'H3', (e) => {
+        setTitle(e.target.innerText);
+      });
+
+      while (funQueue.length > 0) {
+        let fun = funQueue.shift();
+        if (typeof fun === 'function') { fun() };
       }
     }
-    let proseMirror = document.querySelector(".ProseMirror");
-    let pushAdBtn = document.querySelectorAll('.article-ad-radio')[0];
+  }
 
-    if (proseMirror === null) {
-      setTimeout(() => {
-        setHTML(list)
-      }, 1000);
-      return;
+  function setHTML (list) {
+    let container = null;
+    if (IS_UC) {
+      container = $.query('#ueditor_0').contentDocument.body;
     }
 
-    pushAdBtn.click();
+    if (IS_TOUTIAO) {
+      container = $.query('.ProseMirror');
+      let pushAdBtn = $.queryAll('.article-ad-radio')[0];
+      pushAdBtn && pushAdBtn.click();
+    }
 
-    entrust(proseMirror, 'click', 'H3', (e) => {
-      setTitle(e.target.innerText);
-    });
+    if (container === null) return toast('无法获取内容输入框');
+
     let html = '';
-    list.map((item, index) => {
+    list.map(item => {
       html += `<h3><strong>${item.text}</strong></h3>`;
       if (item.top_comments_content) {
         html += `<p>神评论：${item.top_comments_content}</p>`
@@ -120,7 +126,7 @@
     setTitle('搞笑动图GIF');
 
     try {
-      proseMirror.innerHTML = html;
+      container.innerHTML = html;
     } catch (e) {
       toast(e);
       console.log(e);
@@ -128,24 +134,23 @@
   }
 
   function setTitle (title) {
-    let titleInput = document.querySelector('textarea');
-    titleInput.focus();
-    titleInput.value = title;
-    if (typeof titleInput.fireEvent === 'function') {
-      titleInput.fireEvent("oninput");
-      titleInput.fireEvent("onchange");
-    } else {
-      copy(`已复制：${title}，请手动粘贴`);
+    let container = null;
+    if (IS_TOUTIAO) {
+      container = $.query('textarea');
     }
-  }
+    if (IS_UC) {
+      container = $.query('#title');
+    }
 
-  function copy (msg) {
-    let elCp = document.createElement('textarea');
-    elCp.innerText = msg;
-    document.body.appendChild(elCp);
-    elCp.select(); // 选中文本
-    document.execCommand("copy"); // 执行浏览器复制命令
-    document.body.removeChild(elCp);
+    if (container === null) return toast('无法获取标题输入框');
+    container.focus();
+    container.value = title;
+    if (typeof container.fireEvent === 'function') {
+      container.fireEvent("oninput");
+      container.fireEvent("onchange");
+    } else {
+      $.copy(`已复制：${title}，请手动粘贴`);
+    }
   }
 
   function toast (msg, duration=3000) {

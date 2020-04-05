@@ -1,44 +1,30 @@
-const PUBLISH_URL = 'https://mp.toutiao.com/profile_v3/graphic/publish';
+const PUBLISH_URL = {
+  'toutiao': 'https://mp.toutiao.com/profile_v3/graphic/publish',
+  'uc': 'https://mp.dayu.com/dashboard/article/write?spm=a2s0i.db_index.menu.4.3e0e3caa6KbTiF'
+};
 
-let btnPub = document.querySelector('#publish'),
-  inputCount = document.querySelector('#count'),
-  inputArticleCount = document.querySelector('#articleCount'),
-  aGithub = document.querySelector('#github');
+let $publish = $.query('#publish'),
+  $count = $.query('#count'),
+  $articleCount = $.query('#articleCount'),
+  $github = $.query('#github'),
+  $platform = $.query('#platform');
 
-let count = inputCount.value = 20;
-let articleCount = inputArticleCount.value = 2;
+let count = $count.value = 20;
+let articleCount = $articleCount.value = 2;
 
-btnPub.onclick = async function () {
+$publish.onclick = async function () {
   let bg = chrome.extension.getBackgroundPage();
-  count = inputCount.value = Number(inputCount.value) > 0 ? Number(inputCount.value) : 20;
-  articleCount = inputArticleCount.value = Number(inputArticleCount.value) > 0 ? Number(inputArticleCount.value) : 4;
-  // sendMsg({ type: 'link', value: { url: PUBLISH_URL }});
-  window.open(PUBLISH_URL, `funny_gif_${articleCount}`);
+  let platform = $platform.value;
+  count = $count.value = Number($count.value) > 0 ? Number($count.value) : 20;
+  articleCount = $articleCount.value = Number($articleCount.value) > 0 ? Number($articleCount.value) : 4;
+  window.open(PUBLISH_URL[platform], `funny_gif_${articleCount}`);
   await bg.getContent(articleCount, count);
 };
 
-aGithub.onclick = function () {
-  window.open(aGithub.attributes.href.value);
+$github.onclick = function () {
+  window.open($github.attributes.href.value);
 }
 
-document.body.onclick = function (e) {
-  if (e.target.tagName === 'A') {
-    e.target.attributes.href.value && window.open(e.target.attributes.href.value);
-  }
-};
-
-function sendMsg (message) {
-  return new Promise((resolve) => {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        {
-          type: `popup_${message.type}`,
-          value: message.value
-        }, function(response){
-          resolve(response);
-        }
-      );
-    });
-  });
-}
+$.entrust(document.body, 'click', 'A', (e) => {
+  e.target.attributes.href.value && window.open(e.target.attributes.href.value);
+});

@@ -1,5 +1,3 @@
-const PUBLISH_URL = 'https://mp.toutiao.com/profile_v3/graphic/publish';
-
 let articleCount = 4;
 let finishedArticleCount = 0;
 let count = 20;
@@ -19,12 +17,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResonse){
           res: {
             code: res.code,
             result: res.result.splice(0, count),
-            remaining,
-            url: PUBLISH_URL
+            remaining
           }
         }
       };
-      console.log(response);
 
       sendResonse(response);
 
@@ -32,8 +28,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResonse){
         finishedArticleCount = 0;
         res = [];
       }
-    } else {
-      sendMsg('need_login');
     }
   }
 });
