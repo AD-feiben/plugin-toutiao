@@ -62,6 +62,8 @@
             toast(`其中 ${failLen} 张图片加载失败`);
           }
 
+          funQueue = [];
+
           funQueue.push(() => {
             setHTML(canUseList);
           });
@@ -136,23 +138,27 @@
   function setTitle (title) {
     let container = null;
     if (IS_TOUTIAO) {
-      container = $.query('textarea');
+      container = document.querySelector('textarea');
     }
     if (IS_UC) {
-      container = $.query('#title');
+      container = document.querySelector('#title');
     }
 
     if (container === null) return toast('无法获取标题输入框');
 
-    if (typeof container.fireEvent === 'function' && IS_UC === false) {
-      container.focus();
-      container.value = title;
-      container.fireEvent("oninput");
-      container.fireEvent("onchange");
-    } else {
+    if (IS_UC) {
       $.copy(title);
       toast(`已复制：${title}，请手动粘贴`);
+      return;
     }
+
+    let evt = document.createEvent("HTMLEvents");
+    evt.initEvent('oninput', false, false);
+
+    container.focus();
+    container.value = title;
+
+    container.dispatchEvent(evt);
   }
 
   function toast (msg, duration=3000) {
@@ -177,4 +183,6 @@
       }, 200);
     }, duration);
   }
+
+  waitContainerLoad();
 })()
